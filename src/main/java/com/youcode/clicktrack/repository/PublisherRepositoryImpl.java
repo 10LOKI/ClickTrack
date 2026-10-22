@@ -2,7 +2,6 @@ package com.youcode.clicktrack.repository;
 
 import com.youcode.clicktrack.model.Publisher;
 
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,8 +34,11 @@ public class PublisherRepositoryImpl implements PublisherRepository
     @Override
     public Publisher save(Publisher publisher)
     {
-        publisher.setId(sequence.incrementAndGet());
-        publishers.add(publisher);
-        return (publisher);
+        synchronized (publishers)
+        {
+            publisher.setId(sequence.incrementAndGet());
+            publishers.add(publisher);
+            return (publisher);
+        }
     }
 }
