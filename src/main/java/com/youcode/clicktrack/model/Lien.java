@@ -6,17 +6,17 @@ public class Lien
 {
     private Long    id;
     private String  offre;
-    private String  urlDest;
+    private String  urlDestination;
     private final   AtomicInteger clicks = new AtomicInteger(0);
     private Long    publisherId;
 
     public Lien() {
     }
 
-    public Lien(Long id, String offre, String urlDest, Long publisherId) {
+    public Lien(Long id, String offre, String urlDestination, Long publisherId) {
         this.id = id;
         this.offre = offre;
-        this.urlDest = urlDest;
+        this.urlDestination = urlDestination;
         this.publisherId = publisherId;
     }
 
@@ -32,8 +32,8 @@ public class Lien
     public String getOffre() { return offre; }
     public void setOffre(String offre) { this.offre = offre; }
 
-    public String getUrlDest() { return urlDest; }
-    public void setUrlDest(String urlDest) { this.urlDest = urlDest; }
+    public String getUrlDestination() { return urlDestination; }
+    public void setUrlDestination(String urlDestination) { this.urlDestination = urlDestination; }
 
     public Long getPublisherId() { return publisherId; }
     public void setPublisherId(Long publisherId) { this.publisherId = publisherId; }
