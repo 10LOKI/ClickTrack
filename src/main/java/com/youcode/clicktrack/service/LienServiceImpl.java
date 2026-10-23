@@ -3,6 +3,8 @@ package com.youcode.clicktrack.service;
 import com.youcode.clicktrack.dto.CreerLienRequest;
 import com.youcode.clicktrack.dto.LienResponse;
 import com.youcode.clicktrack.dto.OffreResponse;
+import com.youcode.clicktrack.dto.ClickResponse;
+import com.youcode.clicktrack.model.Publisher;
 import com.youcode.clicktrack.model.Lien;
 import com.youcode.clicktrack.repository.LienRepository;
 import com.youcode.clicktrack.repository.PublisherRepository;
@@ -24,6 +26,23 @@ public class LienServiceImpl implements LienService
     {
         this.lienRepository = lienRepository;
         this.publisherRepository = publisherRepository;
+    }
+
+    @Override
+    public ClickResponse compterClic(Long lienId)
+    {
+        if (lienId == null || lienId <= 0)
+        {
+            throw new IllegalArgumentException("L'identifiant du lien doit etre positif.");
+        }
+        Lien lien = lienRepository.findById(lienId)
+                .orElseThrow(() -> new NoSuchElementException("Lien introuvable."));
+        Publisher publisher = publisherRepository.findById(lien.getPublisherId())
+                .orElseThrow(() -> new NoSuchElementException("Publisher introuvable."));
+
+        int clicks = lien.incrementerClicks();
+        return new ClickResponse(lien.getUrlDestination(),
+                publisher.getPrenom() + " " + publisher.getNom(), lien.getOffre(), clicks);
     }
 
     @Override

@@ -222,6 +222,46 @@ class PublisherControllerTest
     }
 
     @Test
+    void trackingCompteChaqueOuvertureEtMetAJourLesStatistiques() throws Exception
+    {
+        Lien lien = liens.save(new Lien(null, "Java", "https://example.com/java", publisherId));
+        for (int attendu = 1; attendu <= 2; attendu++)
+        {
+            String body = mvc.perform(get("/t/{id}", lien.getId()))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            JsonNode json = new ObjectMapper().readTree(body);
+            assertEquals("https://example.com/java", json.get("urlRedirection").asText());
+            assertEquals("Alice Martin", json.get("publisher").asText());
+            assertEquals("Java", json.get("offre").asText());
+            assertEquals(attendu, json.get("clicks").asInt());
+        }
+        String liensJson = mvc.perform(get("/api/publishers/{id}/liens", publisherId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String offresJson = mvc.perform(get("/api/publishers/{id}/offres", publisherId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertEquals(2, new ObjectMapper().readTree(liensJson).get(0).get("clicks").asInt());
+        assertEquals(2, new ObjectMapper().readTree(offresJson).get(0).get("clicks").asInt());
+        assertEquals(2, lien.getClicks());
+    }
+
+    @Test
+    void trackingLienAbsentRetourne404SansModifierUnAutreLien() throws Exception
+    {
+        Lien lien = liens.save(new Lien(null, "Java", "https://example.com", publisherId));
+        mvc.perform(get("/t/999")).andExpect(status().isNotFound());
+        assertEquals(0, lien.getClicks());
+    }
+
+    @Test
+    void trackingIdentifiantsInvalidesRetournent400() throws Exception
+    {
+        for (String id : new String[]{"0", "-1", "abc"})
+        {
+            mvc.perform(get("/t/{id}", id)).andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
     void methodeEtTypeDeContenuNonSupportes() throws Exception
     {
         mvc.perform(put("/api/publishers/{id}/liens", publisherId))

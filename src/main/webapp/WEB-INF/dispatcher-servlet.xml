@@ -17,4 +17,8 @@
     <constructor-arg ref="publisherService"/>
   </bean>
 
+  <bean id="trackingController" class="com.youcode.clicktrack.controller.TrackingController">
+    <constructor-arg ref="lienService"/>
+  </bean>
+
 </beans>
