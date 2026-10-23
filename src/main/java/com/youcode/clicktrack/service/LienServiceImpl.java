@@ -2,6 +2,7 @@ package com.youcode.clicktrack.service;
 
 import com.youcode.clicktrack.dto.CreerLienRequest;
 import com.youcode.clicktrack.dto.LienResponse;
+import com.youcode.clicktrack.dto.OffreResponse;
 import com.youcode.clicktrack.model.Lien;
 import com.youcode.clicktrack.repository.LienRepository;
 import com.youcode.clicktrack.repository.PublisherRepository;
@@ -11,6 +12,8 @@ import java.net.URISyntaxException;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class LienServiceImpl implements LienService
 {
@@ -21,6 +24,33 @@ public class LienServiceImpl implements LienService
     {
         this.lienRepository = lienRepository;
         this.publisherRepository = publisherRepository;
+    }
+
+    @Override
+    public List<OffreResponse> listerOffres(Long publisherId)
+    {
+        if (publisherId == null || publisherId <= 0)
+        {
+            throw new IllegalArgumentException("L'identifiant du publisher doit etre positif.");
+        }
+        if (publisherRepository.findById(publisherId).isEmpty())
+        {
+            throw new NoSuchElementException("Publisher introuvable.");
+        }
+
+        Map<String, OffreResponse> offres = new LinkedHashMap<>();
+        for (Lien lien : lienRepository.findByPublisherId(publisherId))
+        {
+            OffreResponse offre = offres.get(lien.getOffre());
+            if (offre == null)
+            {
+                offre = new OffreResponse(lien.getOffre());
+                offres.put(lien.getOffre(), offre);
+            }
+            offre.setNombreLiens(offre.getNombreLiens() + 1);
+            offre.setClicks(offre.getClicks() + lien.getClicks());
+        }
+        return new ArrayList<>(offres.values());
     }
 
     @Override

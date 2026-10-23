@@ -2,6 +2,7 @@ package com.youcode.clicktrack.controller;
 
 import com.youcode.clicktrack.dto.CreerLienRequest;
 import com.youcode.clicktrack.dto.LienResponse;
+import com.youcode.clicktrack.dto.OffreResponse;
 import com.youcode.clicktrack.service.LienService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,13 @@ public class PublisherController
     public ResponseEntity<String> donneesInvalides(IllegalArgumentException exception)
     {
         return ResponseEntity.badRequest().body(exception.getMessage());
+    }
+
+    @GetMapping("/{id}/offres")
+    @ResponseBody
+    public ResponseEntity<List<OffreResponse>> listerOffres(@PathVariable("id") Long id)
+    {
+        return ResponseEntity.ok(lienService.listerOffres(id));
     }
 
     @ExceptionHandler(NoSuchElementException.class)

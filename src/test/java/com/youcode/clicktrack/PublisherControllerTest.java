@@ -155,6 +155,54 @@ class PublisherControllerTest
     }
 
     @Test
+    void listerOffresRegroupeLesLiensEtAdditionneLeursClics() throws Exception
+    {
+        Lien premier = liens.save(new Lien(null, "Java", "https://example.com/java", publisherId));
+        premier.incrementerClicks();
+        premier.incrementerClicks();
+        Lien second = liens.save(new Lien(null, "Java", "https://example.com/autre-java", publisherId));
+        second.incrementerClicks();
+        liens.save(new Lien(null, "Spring", "https://example.com/spring", publisherId));
+        Lien autrePublisher = liens.save(new Lien(null, "Java", "https://example.org", 2L));
+        autrePublisher.incrementerClicks();
+
+        String body = mvc.perform(get("/api/publishers/{id}/offres", publisherId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        JsonNode json = new ObjectMapper().readTree(body);
+        assertTrue(json.isArray());
+        assertEquals(2, json.size());
+        assertEquals("Java", json.get(0).get("offre").asText());
+        assertEquals(2, json.get(0).get("nombreLiens").asInt());
+        assertEquals(3, json.get(0).get("clicks").asLong());
+        assertEquals("Spring", json.get(1).get("offre").asText());
+        assertEquals(1, json.get(1).get("nombreLiens").asInt());
+        assertEquals(0, json.get(1).get("clicks").asLong());
+        assertEquals(2, premier.getClicks());
+        assertEquals(1, second.getClicks());
+        assertEquals(1, autrePublisher.getClicks());
+    }
+
+    @Test
+    void listerOffresRetourneUneListeVideSansLien() throws Exception
+    {
+        String body = mvc.perform(get("/api/publishers/{id}/offres", publisherId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        JsonNode json = new ObjectMapper().readTree(body);
+        assertTrue(json.isArray());
+        assertEquals(0, json.size());
+    }
+
+    @Test
+    void listerOffresVerifieLePublisher() throws Exception
+    {
+        mvc.perform(get("/api/publishers/999/offres")).andExpect(status().isNotFound());
+        for (String id : new String[]{"0", "-1", "abc"})
+        {
+            mvc.perform(get("/api/publishers/{id}/offres", id)).andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
     void methodeEtTypeDeContenuNonSupportes() throws Exception
     {
         mvc.perform(put("/api/publishers/{id}/liens", publisherId))
