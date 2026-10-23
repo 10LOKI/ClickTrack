@@ -9,6 +9,8 @@ import com.youcode.clicktrack.repository.PublisherRepository;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LienServiceImpl implements LienService
 {
@@ -19,6 +21,27 @@ public class LienServiceImpl implements LienService
     {
         this.lienRepository = lienRepository;
         this.publisherRepository = publisherRepository;
+    }
+
+    @Override
+    public List<LienResponse> listerLiens(Long publisherId)
+    {
+        if (publisherId == null || publisherId <= 0)
+        {
+            throw new IllegalArgumentException("L'identifiant du publisher doit etre positif.");
+        }
+        if (publisherRepository.findById(publisherId).isEmpty())
+        {
+            throw new NoSuchElementException("Publisher introuvable.");
+        }
+
+        List<LienResponse> resultat = new ArrayList<>();
+        for (Lien lien : lienRepository.findByPublisherId(publisherId))
+        {
+            resultat.add(new LienResponse(lien.getId(), lien.getOffre(),
+                    lien.getUrlDestination(), lien.getClicks(), lien.getPublisherId()));
+        }
+        return resultat;
     }
 
     @Override

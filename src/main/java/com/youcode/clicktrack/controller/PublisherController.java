@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
+import java.util.List;
 
 @RequestMapping("/api/publishers")
 public class PublisherController
@@ -26,6 +27,13 @@ public class PublisherController
     {
         LienResponse response = lienService.creerLien(id, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{id}/liens")
+    @ResponseBody
+    public ResponseEntity<List<LienResponse>> listerLiens(@PathVariable("id") Long id)
+    {
+        return ResponseEntity.ok(lienService.listerLiens(id));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

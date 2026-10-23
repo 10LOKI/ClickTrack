@@ -2,6 +2,7 @@ package com.youcode.clicktrack;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.youcode.clicktrack.model.Lien;
 import com.youcode.clicktrack.repository.LienRepository;
 import com.youcode.clicktrack.repository.PublisherRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -108,9 +109,55 @@ class PublisherControllerTest
     }
 
     @Test
+    void listerLiensRetourneUniquementCeuxDuPublisherSansCompterDeClic() throws Exception
+    {
+        Lien premier = liens.save(new Lien(null, "Java", "https://example.com/java", publisherId));
+        premier.incrementerClicks();
+        premier.incrementerClicks();
+        liens.save(new Lien(null, "Spring", "https://example.com/spring", publisherId));
+        liens.save(new Lien(null, "Autre publisher", "https://example.org", 2L));
+
+        String body = mvc.perform(get("/api/publishers/{id}/liens", publisherId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        JsonNode json = new ObjectMapper().readTree(body);
+        assertTrue(json.isArray());
+        assertEquals(2, json.size());
+        assertEquals(premier.getId().longValue(), json.get(0).get("id").asLong());
+        assertEquals("Java", json.get(0).get("offre").asText());
+        assertEquals("https://example.com/java", json.get(0).get("urlDestination").asText());
+        assertEquals(2, json.get(0).get("clicks").asInt());
+        assertEquals(0, json.get(1).get("clicks").asInt());
+        for (JsonNode lien : json)
+        {
+            assertEquals(publisherId.longValue(), lien.get("publisherId").asLong());
+        }
+        assertEquals(2, premier.getClicks());
+    }
+
+    @Test
+    void listerLiensRetourneUneListeVidePourUnPublisherSansLien() throws Exception
+    {
+        String body = mvc.perform(get("/api/publishers/{id}/liens", publisherId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        JsonNode json = new ObjectMapper().readTree(body);
+        assertTrue(json.isArray());
+        assertEquals(0, json.size());
+    }
+
+    @Test
+    void listerLiensVerifieLePublisher() throws Exception
+    {
+        mvc.perform(get("/api/publishers/999/liens")).andExpect(status().isNotFound());
+        for (String id : new String[]{"0", "-1", "abc"})
+        {
+            mvc.perform(get("/api/publishers/{id}/liens", id)).andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
     void methodeEtTypeDeContenuNonSupportes() throws Exception
     {
-        mvc.perform(get("/api/publishers/{id}/liens", publisherId))
+        mvc.perform(put("/api/publishers/{id}/liens", publisherId))
                 .andExpect(status().isMethodNotAllowed());
         mvc.perform(post("/api/publishers/{id}/liens", publisherId)
                 .contentType(MediaType.TEXT_PLAIN).content("Java"))
