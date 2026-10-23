@@ -4,6 +4,8 @@ import com.youcode.clicktrack.dto.CreerLienRequest;
 import com.youcode.clicktrack.dto.LienResponse;
 import com.youcode.clicktrack.dto.OffreResponse;
 import com.youcode.clicktrack.service.LienService;
+import com.youcode.clicktrack.service.PublisherService;
+import com.youcode.clicktrack.model.Publisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +17,19 @@ import java.util.List;
 public class PublisherController
 {
     private final LienService lienService;
+    private final PublisherService publisherService;
 
-    public PublisherController(LienService lienService)
+    public PublisherController(LienService lienService, PublisherService publisherService)
     {
         this.lienService = lienService;
+        this.publisherService = publisherService;
+    }
+
+    @GetMapping
+    @ResponseBody
+    public ResponseEntity<List<Publisher>> listerPublishers()
+    {
+        return ResponseEntity.ok(publisherService.listerPublishers());
     }
 
     @PostMapping("/{id}/liens")

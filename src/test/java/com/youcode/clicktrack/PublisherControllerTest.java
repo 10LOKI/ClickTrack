@@ -52,6 +52,25 @@ class PublisherControllerTest
     }
 
     @Test
+    void listerPublishersRetourneLesDonneesInitialisees() throws Exception
+    {
+        String body = mvc.perform(get("/api/publishers"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        JsonNode json = new ObjectMapper().readTree(body);
+        assertTrue(json.isArray());
+        assertEquals(3, json.size());
+        assertEquals(1, json.get(0).get("id").asLong());
+        assertEquals("Martin", json.get(0).get("nom").asText());
+        assertEquals("Alice", json.get(0).get("prenom").asText());
+        assertEquals("alice@example.com", json.get(0).get("email").asText());
+        assertEquals("INFLUENCEUR", json.get(0).get("categorie").asText());
+        assertEquals(2, json.get(1).get("id").asLong());
+        assertEquals("YOUTUBEUR", json.get(1).get("categorie").asText());
+        assertEquals(3, json.get(2).get("id").asLong());
+        assertEquals("BLOGUEUR", json.get(2).get("categorie").asText());
+    }
+
+    @Test
     void creerLienRetourne201EtEnregistreLesDonnees() throws Exception
     {
         String body = mvc.perform(post("/api/publishers/{id}/liens", publisherId)
