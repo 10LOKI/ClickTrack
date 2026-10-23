@@ -8,6 +8,12 @@
 
   <mvc:annotation-driven/>
 
-  <!-- Beans des controllers a declarer ici -->
+  <bean class="com.youcode.clicktrack.config.XmlRequestMappingHandlerMapping">
+    <property name="order" value="-1"/>
+  </bean>
+
+  <bean id="publisherController" class="com.youcode.clicktrack.controller.PublisherController">
+    <constructor-arg ref="lienService"/>
+  </bean>
 
 </beans>
