@@ -2,8 +2,6 @@ package com.youcode.clicktrack;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.youcode.clicktrack.model.Categorie;
-import com.youcode.clicktrack.model.Publisher;
 import com.youcode.clicktrack.repository.LienRepository;
 import com.youcode.clicktrack.repository.PublisherRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -34,8 +32,7 @@ class PublisherControllerTest
     {
         root = new ClassPathXmlApplicationContext("applicationContext.xml");
         PublisherRepository publishers = root.getBean(PublisherRepository.class);
-        publisherId = publishers.save(new Publisher(null, "Nom", "Prenom",
-                "test@example.com", Categorie.BLOGUEUR)).getId();
+        publisherId = publishers.findAll().get(0).getId();
         liens = root.getBean(LienRepository.class);
 
         web = new XmlWebApplicationContext();

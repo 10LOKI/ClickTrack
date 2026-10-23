@@ -6,6 +6,10 @@
   <bean id="publisherRepository" class="com.youcode.clicktrack.repository.PublisherRepositoryImpl"/>
   <bean id="lienRepository" class="com.youcode.clicktrack.repository.LienRepositoryImpl"/>
 
+  <bean id="dataInitializer" class="com.youcode.clicktrack.init.DataInitializer" init-method="initialiser">
+    <constructor-arg ref="publisherRepository"/>
+  </bean>
+
   <bean id="lienService" class="com.youcode.clicktrack.service.LienServiceImpl">
     <constructor-arg ref="lienRepository"/>
     <constructor-arg ref="publisherRepository"/>
