@@ -102,4 +102,4 @@ MockMvc charge les XML réels. Le test concurrent porte sur le service et ne con
 
 `feature/` désigne les fonctionnalités ; `fix/` sera utilisé pour les corrections. Les branches reprennent les étapes précédemment validées.
 
-La version XML complète et validée, avec sa documentation, est intégrée dans `config-xml`. Les branches `feature/` conservent les étapes de réalisation, notamment les trois user stories. La branche `main` n'a pas été modifiée lors de cette intégration.
+La branche `main` contient la version XML complète, sa documentation et la collection importable dans Apidog. `config-xml` conserve la livraison XML précédemment validée. Les branches `feature/` conservent les étapes de réalisation, notamment les trois user stories et la collection Apidog.
