@@ -1,5 +1,7 @@
 target/
 .idea/
+.smarttomcat/
 *.iml
 *.class
 *.war
+DEBRIEFING.md

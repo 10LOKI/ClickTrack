@@ -1,0 +1,454 @@
+{
+  "info": {
+    "name": "ClickTrack - Brief XML",
+    "description": "Collection importable dans Apidog au format Postman v2.1. Uniquement les cinq endpoints du brief. Executer le dossier 01 dans l'ordre, puis les erreurs du dossier 02. Demarrer Tomcat avant l'execution. Aucun token requis. Chaque nouvelle execution complete cree une offre de test distincte et deux liens. Les GET /t comptent des clics et renvoient du JSON, sans redirection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/clicktrack",
+      "type": "string",
+      "description": "URL du WAR deploye dans Tomcat, sans slash final."
+    },
+    {
+      "key": "publisherId",
+      "value": "",
+      "type": "string",
+      "description": "Renseigne automatiquement par le scenario ; executer depuis la requete 01."
+    },
+    {
+      "key": "publisherNom",
+      "value": "",
+      "type": "string",
+      "description": "Renseigne automatiquement par le scenario ; executer depuis la requete 01."
+    },
+    {
+      "key": "offre",
+      "value": "",
+      "type": "string",
+      "description": "Renseigne automatiquement par le scenario ; executer depuis la requete 01."
+    },
+    {
+      "key": "lienId",
+      "value": "",
+      "type": "string",
+      "description": "Renseigne automatiquement par le scenario ; executer depuis la requete 01."
+    },
+    {
+      "key": "secondLienId",
+      "value": "",
+      "type": "string",
+      "description": "Renseigne automatiquement par le scenario ; executer depuis la requete 01."
+    },
+    {
+      "key": "clicksA",
+      "value": "",
+      "type": "string",
+      "description": "Renseigne automatiquement par le scenario ; executer depuis la requete 01."
+    },
+    {
+      "key": "clicksB",
+      "value": "",
+      "type": "string",
+      "description": "Renseigne automatiquement par le scenario ; executer depuis la requete 01."
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Scenario du brief (executer dans l'ordre)",
+      "item": [
+        {
+          "name": "01 - Lister les publishers",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"publisherId\", \"publisherNom\", \"offre\", \"lienId\", \"secondLienId\", \"clicksA\", \"clicksB\"].forEach(function (nom) {",
+                  "    pm.collectionVariables.unset(nom);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", function () { pm.response.to.have.status(200); });",
+                  "const publishers = pm.response.json();",
+                  "pm.test(\"Au moins un publisher utilisable\", function () {",
+                  "    pm.expect(publishers).to.be.an(\"array\");",
+                  "    pm.expect(publishers.length).to.be.greaterThan(0);",
+                  "    pm.expect(publishers[0]).to.have.all.keys(\"id\", \"nom\", \"prenom\", \"email\", \"categorie\");",
+                  "});",
+                  "if (pm.response.code === 200 && publishers.length > 0) {",
+                  "    pm.collectionVariables.set(\"publisherId\", String(publishers[0].id));",
+                  "    pm.collectionVariables.set(\"publisherNom\", publishers[0].prenom + \" \" + publishers[0].nom);",
+                  "    pm.collectionVariables.set(\"offre\", \"Formation Java - \" + Date.now());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/publishers",
+            "description": "Liste les publishers et memorise le premier pour le scenario. Initialise une offre distincte par execution."
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Creer le premier lien",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", function () { pm.response.to.have.status(201); });",
+                  "const lien = pm.response.json();",
+                  "pm.test(\"Lien cree avec zero clic et le bon publisher\", function () {",
+                  "    pm.expect(lien.id).to.be.a(\"number\").above(0);",
+                  "    pm.expect(lien.offre).to.eql(pm.collectionVariables.get(\"offre\"));",
+                  "    pm.expect(lien.urlDestination).to.eql(\"https://example.com/java\");",
+                  "    pm.expect(lien.publisherId).to.eql(Number(pm.collectionVariables.get(\"publisherId\")));",
+                  "    pm.expect(lien.clicks).to.eql(0);",
+                  "});",
+                  "if (pm.response.code === 201 && lien.id) {",
+                  "    pm.collectionVariables.set(\"lienId\", String(lien.id));",
+                  "    pm.collectionVariables.set(\"clicksA\", \"0\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/publishers/{{publisherId}}/liens",
+            "description": "201 attendu. Memorise lienId pour les ouvertures de tracking.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offre\": \"{{offre}}\",\n  \"urlDestination\": \"https://example.com/java\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Ouvrir le premier lien",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", function () { pm.response.to.have.status(200); });",
+                  "const clic = pm.response.json();",
+                  "const attendu = Number(pm.collectionVariables.get(\"clicksA\")) + 1;",
+                  "pm.test(\"Informations du lien et compteur apres le clic\", function () {",
+                  "    pm.expect(clic.urlRedirection).to.eql(\"https://example.com/java\");",
+                  "    pm.expect(clic.publisher).to.eql(pm.collectionVariables.get(\"publisherNom\"));",
+                  "    pm.expect(clic.offre).to.eql(pm.collectionVariables.get(\"offre\"));",
+                  "    pm.expect(clic.clicks).to.eql(attendu);",
+                  "});",
+                  "if (pm.response.code === 200) pm.collectionVariables.set(\"clicksA\", String(clic.clicks));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/t/{{lienId}}",
+            "description": "Compte un clic. Le premier appel apres creation retourne clicks=1."
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Ouvrir encore le premier lien",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", function () { pm.response.to.have.status(200); });",
+                  "const clic = pm.response.json();",
+                  "const attendu = Number(pm.collectionVariables.get(\"clicksA\")) + 1;",
+                  "pm.test(\"Informations du lien et compteur apres le clic\", function () {",
+                  "    pm.expect(clic.urlRedirection).to.eql(\"https://example.com/java\");",
+                  "    pm.expect(clic.publisher).to.eql(pm.collectionVariables.get(\"publisherNom\"));",
+                  "    pm.expect(clic.offre).to.eql(pm.collectionVariables.get(\"offre\"));",
+                  "    pm.expect(clic.clicks).to.eql(attendu);",
+                  "});",
+                  "if (pm.response.code === 200) pm.collectionVariables.set(\"clicksA\", String(clic.clicks));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/t/{{lienId}}",
+            "description": "Compte un second clic. Dans le scenario complet, clicks=2."
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Creer un second lien pour la meme offre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", function () { pm.response.to.have.status(201); });",
+                  "const lien = pm.response.json();",
+                  "pm.test(\"Lien cree avec zero clic et le bon publisher\", function () {",
+                  "    pm.expect(lien.id).to.be.a(\"number\").above(0);",
+                  "    pm.expect(lien.offre).to.eql(pm.collectionVariables.get(\"offre\"));",
+                  "    pm.expect(lien.urlDestination).to.eql(\"https://example.com/java2\");",
+                  "    pm.expect(lien.publisherId).to.eql(Number(pm.collectionVariables.get(\"publisherId\")));",
+                  "    pm.expect(lien.clicks).to.eql(0);",
+                  "});",
+                  "if (pm.response.code === 201 && lien.id) {",
+                  "    pm.collectionVariables.set(\"secondLienId\", String(lien.id));",
+                  "    pm.collectionVariables.set(\"clicksB\", \"0\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/publishers/{{publisherId}}/liens",
+            "description": "Cree un autre lien pour verifier l'addition des clics par offre.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offre\": \"{{offre}}\",\n  \"urlDestination\": \"https://example.com/java2\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 - Ouvrir le second lien",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", function () { pm.response.to.have.status(200); });",
+                  "const clic = pm.response.json();",
+                  "const attendu = Number(pm.collectionVariables.get(\"clicksB\")) + 1;",
+                  "pm.test(\"Informations du lien et compteur apres le clic\", function () {",
+                  "    pm.expect(clic.urlRedirection).to.eql(\"https://example.com/java2\");",
+                  "    pm.expect(clic.publisher).to.eql(pm.collectionVariables.get(\"publisherNom\"));",
+                  "    pm.expect(clic.offre).to.eql(pm.collectionVariables.get(\"offre\"));",
+                  "    pm.expect(clic.clicks).to.eql(attendu);",
+                  "});",
+                  "if (pm.response.code === 200) pm.collectionVariables.set(\"clicksB\", String(clic.clicks));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/t/{{secondLienId}}",
+            "description": "Compte un clic sur le second lien."
+          },
+          "response": []
+        },
+        {
+          "name": "07 - Lister les liens du publisher",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", function () { pm.response.to.have.status(200); });",
+                  "const liens = pm.response.json();",
+                  "pm.test(\"Liens du publisher et compteurs attendus\", function () {",
+                  "    pm.expect(liens).to.be.an(\"array\");",
+                  "    liens.forEach(function (lien) {",
+                  "        pm.expect(lien.publisherId).to.eql(Number(pm.collectionVariables.get(\"publisherId\")));",
+                  "    });",
+                  "    const propres = liens.filter(function (lien) { return lien.offre === pm.collectionVariables.get(\"offre\"); });",
+                  "    pm.expect(propres.length).to.eql(2);",
+                  "    const premier = propres.find(function (lien) { return String(lien.id) === pm.collectionVariables.get(\"lienId\"); });",
+                  "    const second = propres.find(function (lien) { return String(lien.id) === pm.collectionVariables.get(\"secondLienId\"); });",
+                  "    pm.expect(premier.clicks).to.eql(Number(pm.collectionVariables.get(\"clicksA\")));",
+                  "    pm.expect(second.clicks).to.eql(Number(pm.collectionVariables.get(\"clicksB\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/publishers/{{publisherId}}/liens",
+            "description": "Verifie les deux liens crees et leurs compteurs. Les anciennes offres ne perturbent pas le scenario."
+          },
+          "response": []
+        },
+        {
+          "name": "08 - Lister les offres et leurs totaux",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", function () { pm.response.to.have.status(200); });",
+                  "const offres = pm.response.json();",
+                  "pm.test(\"Deux liens de la meme offre et somme des clics\", function () {",
+                  "    pm.expect(offres).to.be.an(\"array\");",
+                  "    const offre = offres.find(function (item) { return item.offre === pm.collectionVariables.get(\"offre\"); });",
+                  "    pm.expect(offre).to.be.an(\"object\");",
+                  "    pm.expect(offre).to.have.all.keys(\"offre\", \"nombreLiens\", \"clicks\");",
+                  "    pm.expect(offre.nombreLiens).to.eql(2);",
+                  "    pm.expect(offre.clicks).to.eql(Number(pm.collectionVariables.get(\"clicksA\")) + Number(pm.collectionVariables.get(\"clicksB\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/publishers/{{publisherId}}/offres",
+            "description": "L'offre du scenario doit avoir deux liens et trois clics apres execution dans l'ordre."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Cas d'erreur (apres le scenario)",
+      "item": [
+        {
+          "name": "09 - Tracking inexistant - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/t/9223372036854775807",
+            "description": "Identifiant de lien positif choisi hors des donnees usuelles. Reponse 404 attendue."
+          },
+          "response": []
+        },
+        {
+          "name": "10 - Publisher inexistant - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/publishers/9223372036854775807/liens",
+            "description": "La creation doit echouer pour un publisher absent.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offre\": \"{{offre}}\",\n  \"urlDestination\": \"https://example.com/java\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 - URL invalide - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/publishers/{{publisherId}}/liens",
+            "description": "Le service refuse une URL relative, sans enregistrer de lien.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offre\": \"{{offre}}\",\n  \"urlDestination\": \"/page-relative\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

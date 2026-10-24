@@ -3,6 +3,20 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-  <!-- Beans repository, service et DataInitializer a declarer ici -->
+  <bean id="publisherRepository" class="com.youcode.clicktrack.repository.PublisherRepositoryImpl"/>
+  <bean id="lienRepository" class="com.youcode.clicktrack.repository.LienRepositoryImpl"/>
+
+  <bean id="publisherService" class="com.youcode.clicktrack.service.PublisherServiceImpl">
+    <constructor-arg ref="publisherRepository"/>
+  </bean>
+
+  <bean id="dataInitializer" class="com.youcode.clicktrack.init.DataInitializer" init-method="initialiser">
+    <constructor-arg ref="publisherRepository"/>
+  </bean>
+
+  <bean id="lienService" class="com.youcode.clicktrack.service.LienServiceImpl">
+    <constructor-arg ref="lienRepository"/>
+    <constructor-arg ref="publisherRepository"/>
+  </bean>
 
 </beans>

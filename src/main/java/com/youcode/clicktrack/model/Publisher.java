@@ -21,7 +21,7 @@ public class Publisher
         this.categorie = categorie;
     }
 
-    public long getId()
+    public Long getId()
     {
         return (id);
     }
