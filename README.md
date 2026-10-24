@@ -100,4 +100,4 @@ MockMvc charge les XML réels. Le test concurrent porte sur le service et ne con
 
 `feature/` désigne les fonctionnalités ; `fix/` sera utilisé pour les corrections. Les branches reprennent les étapes précédemment validées.
 
-Le code complet validé est sur `feature/tracking-clics`. La branche descendante `feature/documentation-validation` ajoute ce README. Les branches US1, US2 et US3 conservent leurs étapes. Aucune fusion dans main ou config-xml n'a encore été faite.
+La version XML complète et validée, avec sa documentation, est intégrée dans `config-xml`. Les branches `feature/` conservent les étapes de réalisation, notamment les trois user stories. La branche `main` n'a pas été modifiée lors de cette intégration.
