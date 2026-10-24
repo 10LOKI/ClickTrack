@@ -46,6 +46,8 @@ Les données invalides et ids non positifs ou non numériques donnent 400. Un pu
 
 ## Démonstration Postman
 
+Une collection prête à importer dans Apidog et son environnement local sont disponibles dans [apidog/](apidog/README.md). Le guide indique l'ordre des requêtes et le paramétrage de l'URL Tomcat.
+
 1. GET `/api/publishers` : repérer le publisher 1.
 2. POST `/api/publishers/1/liens`, Content-Type `application/json`, avec :
 
